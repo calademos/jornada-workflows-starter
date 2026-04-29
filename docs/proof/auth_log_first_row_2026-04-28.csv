@@ -1,3 +1,13 @@
 rowId,system.updated,eventId,userId,userLogin,localTimestamp,localDayOfWeek,decision,decisionReason,clientIp,cctCodeApplied,previousHash,rowHash,eventTimestamp
+1aceee80-4380-11f1-bbcf-6a9d40daab6b,1777435290988,b5bce991-f2f6-4bba-8998-d7d1a9b75759,00uzyyi2jwbYtTkLW697,,,TU,ALLOWED_WORKDAY_PLACEHOLDER,Workday confirmed; hours check pending,200.123.45.67,,,,2026-04-28T22:14:33Z
+fbff34b0-437f-11f1-810b-35faaaa4853c,1777435239294,c116fc81-672b-40cb-bb25-6cc5368289e4,00uzyyi2jwbYtTkLW697,,,SA,BLOCKED_NON_WORK_DAY,Acesso fora dos dias de trabalho contratados,200.123.45.67,,,,2026-05-02T14:00:00Z
+593e51c0-437f-11f1-a670-e61c9f678a7d,1777434966767,d7448947-cad0-47cb-b81e-945377aed506,00uzyyi2jwbYtTkLW697,,,TU,ALLOWED_WORKDAY_PLACEHOLDER,Workday confirmed; hours check pending,200.123.45.67,,,,2026-04-28T22:14:33Z
+a1e3a620-437d-11f1-b9b4-67a5b695d3b3,1777434229234,cfc0c5a2-9ef9-4188-8e6b-6a943f0ae321,00uzyyi2jwbYtTkLW697,,,,ALLOWED_PLACEHOLDER,Test write — schedule logic not yet evaluated,200.123.45.67,,,,2026-04-28T22:14:33Z
+9d5a42e0-437c-11f1-986c-c6711a4ba73f,1777433792018,1819f218-6664-42e8-a311-b43a18de1174,00uzyyi2jwbYtTkLW697,,,,ALLOWED_PLACEHOLDER,Test write — schedule logic not yet evaluated,200.123.45.67,,,,2026-04-28T22:14:33Z
+490b7790-437c-11f1-a732-1c8a9ffea35f,1777433650573,8ed9108f-1005-45ed-8b2e-8c735db5283e,00uzyyi2jwbYtTkLW697,,,,ALLOWED_PLACEHOLDER,Test write — schedule logic not yet evaluated,200.123.45.67,,,,2026-04-28T22:14:33Z
+12639d80-437c-11f1-b645-a4c54691859e,1777433558883,90266bc3-a8d4-483a-8804-eb3f0d5bf68a,00uzyyi2jwbYtTkLW697,,,,ALLOWED_PLACEHOLDER,Test write — schedule logic not yet evaluated,200.123.45.67,,,,2026-04-28T22:14:33Z
+e7846d10-437b-11f1-851c-8f4818139956,1777433486949,74eadcd3-03c6-408e-b2b0-26f70f34d48d,00uzyyi2jwbYtTkLW697,,,,ALLOWED_PLACEHOLDER,Test write — schedule logic not yet evaluated,200.123.45.67,,,,2026-04-28T22:14:33Z
+7c2628b0-437b-11f1-a30b-67f2e8c8c24a,1777433306935,1cf06951-b247-4d0d-9a41-1e7f0497c96e,00uzyyi2jwbYtTkLW697,,,,ALLOWED_PLACEHOLDER,Test write — schedule logic not yet evaluated,200.123.45.67,,,,2026-04-28T22:14:33Z
+f55f18b0-4379-11f1-8d6b-33c3996dbb82,1777432651327,13c3dc86-c644-4850-bb16-ac41b0504e3f,00uzyyi2jwbYtTkLW697,,,,ALLOWED_PLACEHOLDER,Test write — schedule logic not yet evaluated,200.123.45.67,,,,2026-04-28T22:14:33Z
 9e126190-4377-11f1-8909-88d21d0d6506,1777431645878,1485fc96-025c-46b4-ba6e-603c35fd9df1,00uzyyi2jwbYtTkLW697,,,,ALLOWED_PLACEHOLDER,Test write — schedule logic not yet evaluated,200.123.45.67,,,,"2026-04-28T22:14:33Z
 "
