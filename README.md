@@ -21,10 +21,10 @@ Este repositório fornece um **starter completo** para implementar controle de a
 
 ```
 jornada-workflows-starter/
-├── flows/                          # Workflows exportados (.flopack)
-│   ├── 01-evaluator.flopack        # Avalia cada autenticação
-│   ├── 02-daily-reconciliation.flopack
-│   └── 03-defesa-report.flopack    # Relatório para Justiça do Trabalho
+├── flows/                          # Workflows exportados (.json)
+│   ├── 01-evaluator.json        # Avalia cada autenticação
+│   ├── 02-daily-reconciliation.json
+│   └── 03-defesa-report.json    # Relatório para Justiça do Trabalho
 ├── okta/
 │   ├── profile-schema/             # Atributos customizados de usuário
 │   └── tables/                     # Schemas das Okta Tables
@@ -98,7 +98,7 @@ jornada-workflows-starter/
    - `holidays` — feriados nacionais/estaduais/municipais
    - `cct_rules` — regras de convenção coletiva
 
-3. **Importe os flows** (`flows/*.flopack`)
+3. **Importe os flows** (`flows/*.json`)
    ```
    Okta Workflows Console → Flows → Import Flowpack
    ```
