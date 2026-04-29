@@ -1,0 +1,3 @@
+rowId,system.updated,eventId,userId,userLogin,localTimestamp,localDayOfWeek,decision,decisionReason,clientIp,cctCodeApplied,previousHash,rowHash,eventTimestamp
+9e126190-4377-11f1-8909-88d21d0d6506,1777431645878,1485fc96-025c-46b4-ba6e-603c35fd9df1,00uzyyi2jwbYtTkLW697,,,,ALLOWED_PLACEHOLDER,Test write — schedule logic not yet evaluated,200.123.45.67,,,,"2026-04-28T22:14:33Z
+"
