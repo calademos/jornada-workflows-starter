@@ -1,0 +1,103 @@
+{
+  "flowName": "02-daily-reconciliation",
+  "displayName": "Jornada — Reconciliação Diária",
+  "description": "Roda diariamente às 06:00 BRT. Processa violações pendentes do dia anterior: escala não-acks para RH, envia acks confirmados ao sistema de ponto, gera relatório resumo.",
+  "version": "1.0.0",
+  "trigger": {
+    "type": "Schedule",
+    "schedule": "0 9 * * * UTC",
+    "description": "06:00 America/Sao_Paulo = 09:00 UTC. Ajuste para outros fusos.",
+    "_warning": "Workflows Schedule não respeita horário de verão automaticamente. Em 2026 o Brasil não tem horário de verão, mas confirme antes de produção."
+  },
+  "cards": [
+    {
+      "step": 1,
+      "card": "Date & Time — Compute yesterday",
+      "inputs": { "now": "{{trigger.timestamp}}", "tz": "America/Sao_Paulo" },
+      "outputs": ["yesterdayDate"]
+    },
+    {
+      "step": 2,
+      "card": "Tables — Search Rows (violations)",
+      "filter": "violationDate == {{yesterdayDate}}",
+      "outputs": ["violationsList"]
+    },
+    {
+      "step": 3,
+      "card": "For Each — over violationsList",
+      "loop": [
+        {
+          "step": "3a",
+          "card": "Switch — by status",
+          "branches": {
+            "PENDING_ACK": "→ 3b (escalate)",
+            "ACKNOWLEDGED": "→ 3c (send to ponto)",
+            "EXPIRED": "→ 3d (mark for HR review)",
+            "REJECTED_BY_USER": "→ 3e (urgent escalation)",
+            "ESCALATED_TO_HR": "→ skip"
+          }
+        },
+        {
+          "step": "3b — PENDING_ACK",
+          "actions": [
+            "Update violation: status = ESCALATED_TO_HR, rhNotifiedAt = now",
+            "Email to {{profile.rhEmail}}: 'Funcionário {{userLogin}} acessou sistema fora do horário e não confirmou hora extra em 24h.'",
+            "Slack #compliance-trabalhista: alerta de não-ack"
+          ]
+        },
+        {
+          "step": "3c — ACKNOWLEDGED",
+          "actions": [
+            "Compute minutesOutsideSchedule from violationStartTime → next allowed auth or violationEndTime",
+            "Send to ponto eletrônico API (Pontomais / Tangerino / Senior — see config)",
+            "Update violation: sentToPontoAt = now"
+          ]
+        },
+        {
+          "step": "3d — EXPIRED",
+          "actions": [
+            "Mark for human review by RH. Send email digest."
+          ]
+        },
+        {
+          "step": "3e — REJECTED_BY_USER",
+          "actions": [
+            "URGENT: usuário declarou que NÃO estava trabalhando fora do horário.",
+            "Possível indício de credencial comprometida ou falha na configuração do horário.",
+            "Email imediato para sec@empresa.com.br + RH + Jurídico.",
+            "Slack #security: alerta P1."
+          ]
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "card": "Tables — Aggregate stats",
+      "purpose": "Conta total de violações por tipo, top 10 usuários afetados, total de minutos extras",
+      "outputs": ["dailySummary"]
+    },
+    {
+      "step": 5,
+      "card": "Email — Send daily digest",
+      "to": "compliance@empresa.com.br, juridico@empresa.com.br",
+      "subject": "Resumo diário Jornada — {{yesterdayDate}}",
+      "bodyTemplate": "templates/email-daily-digest.html"
+    }
+  ],
+  "integrations": {
+    "pontomais": {
+      "endpoint": "https://api.pontomais.com.br/api_v2/external/punches",
+      "auth": "Bearer {{config.PONTOMAIS_TOKEN}}",
+      "payload": "Veja docs/INTEGRACOES.md"
+    },
+    "tangerino": {
+      "endpoint": "https://api.tangerino.com.br/v1/punches",
+      "auth": "API Key",
+      "payload": "Veja docs/INTEGRACOES.md"
+    },
+    "senior": {
+      "endpoint": "Consulte ERP Senior — varia por instalação",
+      "_note": "Senior frequentemente é on-prem. Pode requerer SOAP via VPN."
+    }
+  }
+}

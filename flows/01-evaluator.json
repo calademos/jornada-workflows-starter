@@ -1,0 +1,235 @@
+{
+  "flowName": "01-evaluator",
+  "displayName": "Jornada — Evaluator",
+  "description": "Avalia cada autenticação contra horário de trabalho do usuário, feriados, dia da semana e regras da CCT. Decisão registrada em auth_log; violações criam linha em violations e disparam fluxo de acknowledgment.",
+  "version": "1.0.0",
+  "trigger": {
+    "type": "EventHook",
+    "eventTypes": [
+      "user.session.start"
+    ],
+    "description": "Disparado por Okta após cada autenticação bem-sucedida. ATENÇÃO: este evento é POST-AUTH — o usuário já obteve sessão antes deste flow rodar. Para bloqueio preventivo real, use Token Inline Hook."
+  },
+  "inputs": {
+    "eventId": "string (gerado pelo Okta)",
+    "eventTime": "datetime UTC",
+    "actor.id": "userId Okta",
+    "actor.alternateId": "email/login",
+    "client.ipAddress": "string",
+    "client.userAgent.rawUserAgent": "string",
+    "target[0].displayName": "app sendo acessado"
+  },
+  "cards": [
+    {
+      "step": 1,
+      "card": "Function — Generate UUID",
+      "purpose": "Cria o eventId (auth_log) e violationId (caso necessário)",
+      "outputs": ["authLogId", "potentialViolationId"]
+    },
+    {
+      "step": 2,
+      "card": "Okta — Read User",
+      "inputs": { "userId": "{{trigger.actor.id}}" },
+      "outputs": [
+        "profile.workScheduleStart",
+        "profile.workScheduleEnd",
+        "profile.workDays",
+        "profile.userTimezone",
+        "profile.cctCode",
+        "profile.exemptArt62",
+        "profile.managerEmail",
+        "profile.rhEmail",
+        "profile.registroFuncional"
+      ]
+    },
+    {
+      "step": 3,
+      "card": "If/Else — Art. 62 exempt",
+      "condition": "profile.exemptArt62 == true",
+      "trueBranch": "→ go to step 13 (log as EXEMPT_ART62 and finish)",
+      "falseBranch": "→ continue to step 4"
+    },
+    {
+      "step": 4,
+      "card": "Date & Time — Format Date",
+      "purpose": "Converter eventTime de UTC para timezone do usuário",
+      "inputs": {
+        "datetime": "{{trigger.eventTime}}",
+        "timezone": "{{profile.userTimezone}}",
+        "format": "yyyy-MM-dd'T'HH:mm:ssXXX"
+      },
+      "outputs": ["localTimestamp", "localDate", "localTime", "localDayOfWeek (SU/MO/TU/WE/TH/FR/SA)"]
+    },
+    {
+      "step": 5,
+      "card": "Tables — Search Rows (cct_rules)",
+      "inputs": { "cctCode": "{{profile.cctCode}}" },
+      "outputs": [
+        "cct.maxDailyHours",
+        "cct.overtimeMaxDailyMinutes",
+        "cct.interjornadaMinHours",
+        "cct.saturdayIsWorkDay",
+        "cct.additionalHolidays"
+      ]
+    },
+    {
+      "step": 6,
+      "card": "Tables — Search Rows (holidays)",
+      "purpose": "Verifica se localDate é feriado",
+      "inputs": {
+        "filter": "date == {{localDate}} AND (scope == 'NACIONAL' OR uf == '{{user.uf}}')"
+      },
+      "outputs": ["isHoliday (boolean)", "holidayName"]
+    },
+    {
+      "step": 7,
+      "card": "If/Else — Holiday check",
+      "condition": "isHoliday == true AND holiday.isOptional == false",
+      "trueBranch": "→ decision = BLOCKED_HOLIDAY → step 11",
+      "falseBranch": "→ continue"
+    },
+    {
+      "step": 8,
+      "card": "List — Contains (workDays)",
+      "purpose": "É um dia de trabalho?",
+      "inputs": {
+        "list": "{{profile.workDays}} (split por vírgula)",
+        "value": "{{localDayOfWeek}}"
+      },
+      "outputs": ["isWorkDay (boolean)"]
+    },
+    {
+      "step": 9,
+      "card": "If/Else — Work day check",
+      "condition": "isWorkDay == false",
+      "trueBranch": "→ decision = BLOCKED_NON_WORK_DAY → step 11",
+      "falseBranch": "→ continue"
+    },
+    {
+      "step": 10,
+      "card": "Custom — Time Range Check",
+      "purpose": "localTime está entre workScheduleStart e workScheduleEnd?",
+      "inputs": {
+        "currentTime": "{{localTime}}",
+        "rangeStart": "{{profile.workScheduleStart}}",
+        "rangeEnd": "{{profile.workScheduleEnd}}"
+      },
+      "outputs": ["isWithinHours (boolean)"],
+      "logic": "Compara strings HH:mm. Se workScheduleEnd < workScheduleStart, considera que cruza meia-noite (turno noturno).",
+      "decision": "isWithinHours == true → ALLOWED. Senão → BLOCKED_OFF_HOURS."
+    },
+    {
+      "step": 11,
+      "card": "Switch — Decision routing",
+      "branches": {
+        "ALLOWED": "→ step 12 (log allowed)",
+        "EXEMPT_ART62": "→ step 13 (log exempt)",
+        "BLOCKED_*": "→ step 14 (create violation)"
+      }
+    },
+    {
+      "step": 12,
+      "card": "Tables — Add Row (auth_log) — ALLOWED",
+      "inputs": {
+        "eventId": "{{authLogId}}",
+        "userId": "{{trigger.actor.id}}",
+        "userLogin": "{{trigger.actor.alternateId}}",
+        "registroFuncional": "{{profile.registroFuncional}}",
+        "eventTimestamp": "{{trigger.eventTime}}",
+        "localTimestamp": "{{localTimestamp}}",
+        "localDayOfWeek": "{{localDayOfWeek}}",
+        "decision": "ALLOWED",
+        "decisionReason": "Acesso dentro do horário contratado.",
+        "clientIp": "{{trigger.client.ipAddress}}",
+        "userAgent": "{{trigger.client.userAgent.rawUserAgent | truncate(500)}}",
+        "appLabel": "{{trigger.target[0].displayName}}",
+        "cctCodeApplied": "{{profile.cctCode}}",
+        "previousHash": "{{readPreviousHash()}}",
+        "rowHash": "{{computeHash()}}"
+      },
+      "next": "→ end"
+    },
+    {
+      "step": 13,
+      "card": "Tables — Add Row (auth_log) — EXEMPT",
+      "inputs": "decision = EXEMPT_ART62, demais campos similares ao step 12",
+      "next": "→ end"
+    },
+    {
+      "step": 14,
+      "card": "Function — Generate HMAC ack token",
+      "purpose": "Cria token assinado com segredo do flow para link de acknowledgment.",
+      "inputs": {
+        "violationId": "{{potentialViolationId}}",
+        "userId": "{{trigger.actor.id}}",
+        "expiresAt": "{{trigger.eventTime + 24h}}"
+      },
+      "secret": "{{flow.secret.HMAC_KEY}}",
+      "outputs": ["ackToken"]
+    },
+    {
+      "step": 15,
+      "card": "Tables — Add Row (auth_log) — BLOCKED",
+      "inputs": "decision = BLOCKED_*, demais campos similares ao step 12",
+      "next": "→ continue"
+    },
+    {
+      "step": 16,
+      "card": "Tables — Add Row (violations)",
+      "inputs": {
+        "violationId": "{{potentialViolationId}}",
+        "linkedAuthLogId": "{{authLogId}}",
+        "userId": "{{trigger.actor.id}}",
+        "userLogin": "{{trigger.actor.alternateId}}",
+        "registroFuncional": "{{profile.registroFuncional}}",
+        "violationDate": "{{localDate}}",
+        "violationStartTime": "{{localTimestamp}}",
+        "violationType": "{{decision}}",
+        "status": "PENDING_ACK",
+        "ackToken": "{{ackToken | sha256}}",
+        "ackTokenExpiresAt": "{{trigger.eventTime + 24h}}",
+        "rowHash": "{{computeHash()}}"
+      }
+    },
+    {
+      "step": 17,
+      "card": "Email — Send (to user)",
+      "subject": "Acesso registrado fora do horário — Confirme se está fazendo hora extra",
+      "to": "{{trigger.actor.alternateId}}",
+      "bodyTemplate": "templates/email-ack-request.html",
+      "templateVars": {
+        "userName": "{{profile.firstName}}",
+        "violationTime": "{{localTimestamp | format('dd/MM/yyyy HH:mm')}}",
+        "ackUrl": "https://ack.{{config.acknowledgmentDomain}}/ack?t={{ackToken}}&v={{potentialViolationId}}"
+      }
+    },
+    {
+      "step": 18,
+      "card": "Slack — Send Message (canal #compliance-trabalhista)",
+      "purpose": "Notificação interna para RH/Jurídico ter visibilidade",
+      "message": ":warning: Acesso fora do horário: {{trigger.actor.alternateId}} às {{localTimestamp}} — violação {{potentialViolationId}}"
+    },
+    {
+      "step": 19,
+      "card": "Email — Send (to manager)",
+      "to": "{{profile.managerEmail}}",
+      "subject": "Sua equipe registrou acesso fora do horário",
+      "condition": "Apenas se profile.managerEmail estiver preenchido"
+    }
+  ],
+  "errorHandling": {
+    "userNotFound": "Logar em auth_log com decision='ERROR_USER_NOT_FOUND'. Não bloquear.",
+    "missingProfileFields": "Logar em auth_log com decision='ERROR_INCOMPLETE_PROFILE'. Notificar admin do RH.",
+    "tableWriteFailure": "Retry exponencial 3x. Após falha final, alertar via PagerDuty/email para sre@empresa.com.br. NUNCA falhar silenciosamente — perda de log = perda de defesa."
+  },
+  "secretsRequired": [
+    "HMAC_KEY (32+ bytes random) — usado para assinar tokens de ack",
+    "SLACK_WEBHOOK_URL — canal de compliance",
+    "ACK_PAGE_DOMAIN — onde a página Next.js está hospedada"
+  ],
+  "performanceNotes": [
+    "Cada execução: ~2-4 segundos. Para tenants com >50k auths/dia, considere upgrade da licença Workflows.",
+    "Cache do CCT por usuário diminuiria latência mas Workflows não suporta cache nativo — cada execução faz nova busca em tables."
+  ],
+  "_implementationNote": "Este JSON é a especificação humana do flow. Para importar no Okta Workflows, recrie card a card no Console (Flow Studio) ou peça à equipe Jornada Pro o pacote .flopack pré-construído."
+}

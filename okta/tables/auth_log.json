@@ -1,0 +1,115 @@
+{
+  "tableName": "auth_log",
+  "description": "Log de todas as tentativas de autenticação avaliadas pelo Evaluator. Cada linha representa uma decisão (ALLOWED, BLOCKED, ACK_PENDING, ACK_RECEIVED).",
+  "primaryKey": "eventId",
+  "indexes": [
+    "userId",
+    "eventTimestamp",
+    "decision"
+  ],
+  "estimatedRowsPerYear": "auth_count_per_user × user_count × 250 work_days",
+  "columns": [
+    {
+      "name": "eventId",
+      "type": "text",
+      "description": "UUID gerado pelo flow. Chave primária.",
+      "required": true,
+      "example": "evt_a1b2c3d4-..."
+    },
+    {
+      "name": "userId",
+      "type": "text",
+      "description": "Okta user ID (não o email — pode mudar).",
+      "required": true,
+      "example": "00u1abc..."
+    },
+    {
+      "name": "userLogin",
+      "type": "text",
+      "description": "Email/login no momento do evento (snapshot).",
+      "required": true,
+      "example": "joao.silva@empresa.com.br"
+    },
+    {
+      "name": "registroFuncional",
+      "type": "text",
+      "description": "Matrícula no momento do evento. Crítico para reconciliação com ponto eletrônico.",
+      "example": "12345"
+    },
+    {
+      "name": "eventTimestamp",
+      "type": "datetime",
+      "description": "Timestamp em UTC do momento da autenticação.",
+      "required": true,
+      "example": "2026-04-28T22:14:33.000Z"
+    },
+    {
+      "name": "localTimestamp",
+      "type": "datetime",
+      "description": "Timestamp já convertido para o timezone do usuário. Facilita análise.",
+      "required": true,
+      "example": "2026-04-28T19:14:33-03:00"
+    },
+    {
+      "name": "localDayOfWeek",
+      "type": "text",
+      "description": "Dia da semana no timezone local. SU/MO/TU/WE/TH/FR/SA.",
+      "example": "TU"
+    },
+    {
+      "name": "decision",
+      "type": "text",
+      "description": "Resultado da avaliação. Valores: ALLOWED, BLOCKED_OFF_HOURS, BLOCKED_HOLIDAY, BLOCKED_NON_WORK_DAY, BLOCKED_INTERJORNADA, EXEMPT_ART62, ACK_PENDING, ACK_RECEIVED.",
+      "required": true,
+      "example": "ALLOWED"
+    },
+    {
+      "name": "decisionReason",
+      "type": "text",
+      "description": "Mensagem em português explicando a decisão. Exibida ao usuário e usada em relatórios.",
+      "example": "Acesso fora do horário contratado (08:00–18:00). Sábado não é dia de trabalho."
+    },
+    {
+      "name": "clientIp",
+      "type": "text",
+      "description": "IP de origem da autenticação.",
+      "example": "200.123.45.67"
+    },
+    {
+      "name": "userAgent",
+      "type": "text",
+      "description": "User agent do cliente. Truncado em 500 chars.",
+      "example": "Mozilla/5.0..."
+    },
+    {
+      "name": "appLabel",
+      "type": "text",
+      "description": "Aplicação Okta sendo acessada (se disponível no event hook).",
+      "example": "Gmail"
+    },
+    {
+      "name": "cctCodeApplied",
+      "type": "text",
+      "description": "Código da CCT que estava em vigor para o usuário no momento.",
+      "example": "BANCARIOS_SP_2025"
+    },
+    {
+      "name": "previousHash",
+      "type": "text",
+      "description": "Hash da linha anterior na tabela. Forma a hash chain.",
+      "example": "a3f5...c829"
+    },
+    {
+      "name": "rowHash",
+      "type": "text",
+      "description": "SHA-256(previousHash || eventId || userId || eventTimestamp || decision). Tamper-evident.",
+      "required": true,
+      "example": "b4e6...d930"
+    }
+  ],
+  "retentionPolicy": "Conforme Art. 11 da CLT (prescrição quinquenal): mínimo 5 anos. Recomendado 6 anos para folga.",
+  "exportFormats": [
+    "CSV — para análise e auditoria interna",
+    "PDF — via flow 03-defesa-report (não é prova legalmente robusta)"
+  ]
+}

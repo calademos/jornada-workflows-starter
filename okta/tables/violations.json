@@ -1,0 +1,135 @@
+{
+  "tableName": "violations",
+  "description": "Eventos onde acesso ocorreu fora do horário. Esta tabela é o coração da defesa jurídica — cada linha é evidência potencial.",
+  "primaryKey": "violationId",
+  "indexes": [
+    "userId",
+    "status",
+    "violationDate"
+  ],
+  "columns": [
+    {
+      "name": "violationId",
+      "type": "text",
+      "description": "UUID. Referenciado pela página de acknowledgment.",
+      "required": true,
+      "example": "vio_a1b2c3d4-..."
+    },
+    {
+      "name": "linkedAuthLogId",
+      "type": "text",
+      "description": "Referência ao eventId em auth_log.",
+      "required": true,
+      "example": "evt_x9y8z7w6-..."
+    },
+    {
+      "name": "userId",
+      "type": "text",
+      "required": true,
+      "example": "00u1abc..."
+    },
+    {
+      "name": "userLogin",
+      "type": "text",
+      "required": true,
+      "example": "joao.silva@empresa.com.br"
+    },
+    {
+      "name": "registroFuncional",
+      "type": "text",
+      "example": "12345"
+    },
+    {
+      "name": "violationDate",
+      "type": "date",
+      "required": true,
+      "example": "2026-04-28"
+    },
+    {
+      "name": "violationStartTime",
+      "type": "datetime",
+      "description": "Início estimado do trabalho fora do horário.",
+      "example": "2026-04-28T22:14:33-03:00"
+    },
+    {
+      "name": "violationEndTime",
+      "type": "datetime",
+      "description": "Fim do trabalho fora do horário (preenchido na próxima auth ou via timeout).",
+      "example": "2026-04-28T23:42:01-03:00"
+    },
+    {
+      "name": "violationType",
+      "type": "text",
+      "description": "OFF_HOURS, HOLIDAY, NON_WORK_DAY, INTERJORNADA_VIOLATION, OVERTIME_LIMIT_EXCEEDED.",
+      "required": true,
+      "example": "OFF_HOURS"
+    },
+    {
+      "name": "minutesOutsideSchedule",
+      "type": "integer",
+      "description": "Quantos minutos foram trabalhados fora do horário.",
+      "example": 88
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "description": "PENDING_ACK, ACKNOWLEDGED, ESCALATED_TO_HR, REJECTED_BY_USER, EXPIRED.",
+      "required": true,
+      "example": "PENDING_ACK"
+    },
+    {
+      "name": "ackToken",
+      "type": "text",
+      "description": "Token HMAC enviado ao usuário no link de acknowledgment. Não armazenar token completo após ack — armazenar apenas hash.",
+      "example": "ack_..."
+    },
+    {
+      "name": "ackTokenExpiresAt",
+      "type": "datetime",
+      "description": "Token de ack expira em 24h.",
+      "example": "2026-04-29T22:14:33Z"
+    },
+    {
+      "name": "ackReceivedAt",
+      "type": "datetime",
+      "description": "Timestamp do clique em 'Confirmo hora extra'.",
+      "example": "2026-04-28T22:18:09Z"
+    },
+    {
+      "name": "ackReason",
+      "type": "text",
+      "description": "Motivo declarado pelo usuário (campo livre, opcional).",
+      "example": "Atendimento de incidente em produção"
+    },
+    {
+      "name": "ackClientIp",
+      "type": "text",
+      "description": "IP de origem do clique de ack. Importante: pode diferir do clientIp original.",
+      "example": "200.123.45.67"
+    },
+    {
+      "name": "managerNotifiedAt",
+      "type": "datetime",
+      "example": "2026-04-28T22:14:35Z"
+    },
+    {
+      "name": "rhNotifiedAt",
+      "type": "datetime",
+      "description": "Preenchido apenas se a violação foi escalada (ex: ack não recebido em 24h).",
+      "example": ""
+    },
+    {
+      "name": "sentToPontoAt",
+      "type": "datetime",
+      "description": "Quando o evento foi enviado ao sistema de ponto eletrônico (Pontomais, Tangerino, Senior, etc.).",
+      "example": "2026-04-29T06:00:00Z"
+    },
+    {
+      "name": "rowHash",
+      "type": "text",
+      "description": "Hash chain (continua de auth_log).",
+      "required": true
+    }
+  ],
+  "criticalNote": "Esta tabela é prova em potencial. Trate-a como evidência: backup diário, exportação semanal para storage WORM, retenção de 6+ anos."
+}

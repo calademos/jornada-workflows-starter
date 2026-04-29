@@ -1,0 +1,106 @@
+{
+  "flowName": "03-defesa-report",
+  "displayName": "Jornada — Relatório de Defesa Trabalhista",
+  "description": "Gera CSV consolidado para um usuário em um período (tipicamente para defesa em reclamatória trabalhista). Trigger via API endpoint que RH/Jurídico chama.",
+  "version": "1.0.0",
+  "trigger": {
+    "type": "API Endpoint",
+    "method": "POST",
+    "url": "/api/jornada/defesa-report",
+    "auth": "API Key (header: x-api-key) — fornecida apenas a Jurídico/RH sênior",
+    "body": {
+      "userId or userLogin": "string",
+      "startDate": "YYYY-MM-DD",
+      "endDate": "YYYY-MM-DD",
+      "requestedBy": "string (e-mail do solicitante para audit)",
+      "reclamatoriaProcessNumber": "string opcional"
+    }
+  },
+  "cards": [
+    {
+      "step": 1,
+      "card": "Custom — Validate request",
+      "checks": [
+        "API key válida",
+        "endDate - startDate <= 365 dias",
+        "requestedBy é e-mail corporativo",
+        "Resolve userLogin → userId se necessário"
+      ]
+    },
+    {
+      "step": 2,
+      "card": "Tables — Search auth_log",
+      "filter": "userId == {{input.userId}} AND eventTimestamp BETWEEN {{startDate}} AND {{endDate}}",
+      "outputs": ["authLogRows"]
+    },
+    {
+      "step": 3,
+      "card": "Tables — Search violations",
+      "filter": "userId == {{input.userId}} AND violationDate BETWEEN {{startDate}} AND {{endDate}}",
+      "outputs": ["violationRows"]
+    },
+    {
+      "step": 4,
+      "card": "Custom — Verify hash chain integrity",
+      "purpose": "Reconstrói a hash chain dos rows retornados e verifica se cada rowHash bate com o hash recomputado",
+      "logic": "Para cada row em ordem cronológica: expected = SHA256(prevHash + eventId + userId + eventTimestamp + decision); flag se expected != row.rowHash",
+      "outputs": ["chainIntegrityValid (boolean)", "tamperedRows (list)"]
+    },
+    {
+      "step": 5,
+      "card": "Custom — Compute summary stats",
+      "outputs": [
+        "totalAccessAttempts",
+        "totalAllowed",
+        "totalBlockedOffHours",
+        "totalAcknowledgedOvertime",
+        "totalMinutesOvertime",
+        "weekendAccessCount",
+        "holidayAccessCount",
+        "averageAccessTime",
+        "interjornadaViolationsCount"
+      ]
+    },
+    {
+      "step": 6,
+      "card": "CSV — Generate",
+      "outputs": ["authLogCsv", "violationsCsv"]
+    },
+    {
+      "step": 7,
+      "card": "PDF — Generate cover sheet",
+      "_warning": "Workflows não tem gerador de PDF nativo. Você precisará de integração externa (HTTP call para serviço como DocRaptor, ou um endpoint Next.js que gere o PDF). Veja docs/PDF-GENERATION.md.",
+      "content": [
+        "Cabeçalho: 'Relatório de Acesso Digital — Defesa Trabalhista'",
+        "Funcionário: {{userLogin}}",
+        "Período: {{startDate}} a {{endDate}}",
+        "Total de eventos: {{totalAccessAttempts}}",
+        "Estatísticas resumidas",
+        "Verificação de integridade da hash chain: {{chainIntegrityValid}}",
+        "Solicitado por: {{requestedBy}} em {{now}}",
+        "Processo: {{reclamatoriaProcessNumber}}",
+        "Rodapé: 'Documento gerado automaticamente. Não substitui parecer jurídico.'"
+      ]
+    },
+    {
+      "step": 8,
+      "card": "ZIP — Bundle",
+      "files": ["coversheet.pdf", "auth_log.csv", "violations.csv", "verification.txt"]
+    },
+    {
+      "step": 9,
+      "card": "Email — Send to requester",
+      "to": "{{input.requestedBy}}",
+      "subject": "Relatório Jornada — {{userLogin}} — {{startDate}} a {{endDate}}",
+      "attachment": "{{zipBundle}}",
+      "body": "Conforme solicitado em {{now}}. Este relatório é confidencial e deve ser tratado como prova em processo trabalhista."
+    },
+    {
+      "step": 10,
+      "card": "Tables — Add Row (audit_report_requests)",
+      "purpose": "Audita quem pediu relatório de quem e quando — meta-evidência para LGPD",
+      "fields": ["requestedBy", "targetUser", "dateRange", "requestedAt", "reclamatoriaProcessNumber"]
+    }
+  ],
+  "_legalDisclaimer": "O CSV gerado por este flow não é prova robusta legalmente: Okta Tables são editáveis por admins. Para evidência judicialmente sólida, exporte semanalmente para storage WORM (S3 Object Lock, ou similar) e considere serviço de timestamping certificado por ICP-Brasil. Veja docs/EVIDENCIA-LEGAL.md."
+}

@@ -1,0 +1,135 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Jornada CLT Profile Extension",
+  "description": "Atributos customizados de usuário Okta para controle de jornada conforme CLT brasileira. Importar via Okta Admin Console → Directory → Profile Editor → User (default).",
+  "version": "1.0.0",
+  "type": "object",
+  "properties": {
+    "workScheduleStart": {
+      "title": "Início do expediente",
+      "description": "Horário de início no formato HH:mm (24h). Ex: 08:00",
+      "type": "string",
+      "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+      "example": "08:00",
+      "permissions": [
+        { "principal": "SELF", "action": "READ_ONLY" }
+      ]
+    },
+    "workScheduleEnd": {
+      "title": "Fim do expediente",
+      "description": "Horário de fim no formato HH:mm (24h). Ex: 18:00",
+      "type": "string",
+      "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+      "example": "18:00",
+      "permissions": [
+        { "principal": "SELF", "action": "READ_ONLY" }
+      ]
+    },
+    "workDays": {
+      "title": "Dias de trabalho",
+      "description": "Dias da semana em que o usuário trabalha. Lista separada por vírgula. Valores: SU, MO, TU, WE, TH, FR, SA",
+      "type": "string",
+      "pattern": "^(SU|MO|TU|WE|TH|FR|SA)(,(SU|MO|TU|WE|TH|FR|SA))*$",
+      "example": "MO,TU,WE,TH,FR",
+      "permissions": [
+        { "principal": "SELF", "action": "READ_ONLY" }
+      ]
+    },
+    "userTimezone": {
+      "title": "Fuso horário do usuário",
+      "description": "Timezone IANA. Padrão: America/Sao_Paulo. Outros comuns: America/Manaus, America/Belem, America/Recife",
+      "type": "string",
+      "default": "America/Sao_Paulo",
+      "example": "America/Sao_Paulo",
+      "enum": [
+        "America/Sao_Paulo",
+        "America/Manaus",
+        "America/Belem",
+        "America/Recife",
+        "America/Fortaleza",
+        "America/Cuiaba",
+        "America/Campo_Grande",
+        "America/Porto_Velho",
+        "America/Boa_Vista",
+        "America/Rio_Branco",
+        "America/Noronha"
+      ]
+    },
+    "cctCode": {
+      "title": "Código da CCT aplicável",
+      "description": "Identificador da Convenção Coletiva de Trabalho aplicável a este usuário. Deve corresponder a uma linha na table cct_rules.",
+      "type": "string",
+      "example": "BANCARIOS_SP_2025",
+      "enum": [
+        "CLT_PADRAO",
+        "BANCARIOS_SP_2025",
+        "COMERCIARIOS_SP_2025",
+        "METALURGICOS_ABC_2025",
+        "TELEMARKETING_BR_2025",
+        "PETROLEIROS_BR_2025",
+        "OUTROS"
+      ]
+    },
+    "overtimeMaxDailyMinutes": {
+      "title": "Limite diário de hora extra (minutos)",
+      "description": "Limite máximo de minutos de hora extra por dia. CLT Art. 59: máximo 2 horas (120 min). CCTs podem reduzir.",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 240,
+      "default": 120,
+      "example": 120
+    },
+    "exemptArt62": {
+      "title": "Isento de controle de jornada (Art. 62 CLT)",
+      "description": "TRUE para cargos de confiança, gerentes, e trabalho externo sem controle (Art. 62, I e II da CLT). Esses usuários NÃO são bloqueados pelo sistema.",
+      "type": "boolean",
+      "default": false,
+      "example": false
+    },
+    "interjornadaMinHours": {
+      "title": "Intervalo interjornada mínimo (horas)",
+      "description": "CLT Art. 66: mínimo 11 horas consecutivas entre jornadas. Alguns CCTs aumentam esse mínimo.",
+      "type": "integer",
+      "minimum": 11,
+      "maximum": 24,
+      "default": 11,
+      "example": 11
+    },
+    "managerEmail": {
+      "title": "E-mail do gestor direto",
+      "description": "Para notificações de violação. Pode ser populado via SCIM a partir do HRIS.",
+      "type": "string",
+      "format": "email",
+      "example": "gestor@empresa.com.br"
+    },
+    "rhEmail": {
+      "title": "E-mail do RH responsável",
+      "description": "E-mail do responsável de RH para escalonamentos.",
+      "type": "string",
+      "format": "email",
+      "default": "rh@empresa.com.br"
+    },
+    "registroFuncional": {
+      "title": "Matrícula / Registro funcional",
+      "description": "Identificador interno do funcionário no sistema de RH. Usado para reconciliação com sistema de ponto eletrônico.",
+      "type": "string",
+      "example": "12345"
+    },
+    "lastAcknowledgmentAt": {
+      "title": "Último ack de hora extra",
+      "description": "Timestamp do último ack registrado. Atualizado automaticamente pelos flows.",
+      "type": "string",
+      "format": "date-time",
+      "permissions": [
+        { "principal": "SELF", "action": "READ_ONLY" }
+      ]
+    }
+  },
+  "required": [
+    "workScheduleStart",
+    "workScheduleEnd",
+    "workDays",
+    "userTimezone",
+    "cctCode"
+  ]
+}

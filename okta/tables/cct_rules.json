@@ -1,0 +1,183 @@
+{
+  "tableName": "cct_rules",
+  "description": "Regras de cada Convenção Coletiva de Trabalho codificadas. Cada linha = um CCT identificável. Atualizar anualmente após renegociações.",
+  "primaryKey": "cctCode",
+  "indexes": [
+    "cctCode",
+    "validFrom",
+    "validUntil"
+  ],
+  "columns": [
+    {
+      "name": "cctCode",
+      "type": "text",
+      "description": "Código único da CCT.",
+      "required": true,
+      "example": "BANCARIOS_SP_2025"
+    },
+    {
+      "name": "displayName",
+      "type": "text",
+      "description": "Nome legível em português.",
+      "required": true,
+      "example": "Bancários — São Paulo — 2025/2026"
+    },
+    {
+      "name": "category",
+      "type": "text",
+      "description": "Categoria profissional.",
+      "example": "Bancários"
+    },
+    {
+      "name": "uf",
+      "type": "text",
+      "description": "Estado de aplicação. Vazio = nacional.",
+      "example": "SP"
+    },
+    {
+      "name": "validFrom",
+      "type": "date",
+      "description": "Data de início de vigência.",
+      "required": true,
+      "example": "2025-09-01"
+    },
+    {
+      "name": "validUntil",
+      "type": "date",
+      "description": "Data de fim de vigência.",
+      "required": true,
+      "example": "2026-08-31"
+    },
+    {
+      "name": "maxDailyHours",
+      "type": "number",
+      "description": "Jornada máxima diária ordinária (em horas).",
+      "default": 8,
+      "example": 6
+    },
+    {
+      "name": "maxWeeklyHours",
+      "type": "number",
+      "description": "Jornada máxima semanal ordinária.",
+      "default": 44,
+      "example": 30
+    },
+    {
+      "name": "overtimeMaxDailyMinutes",
+      "type": "integer",
+      "description": "Limite de hora extra por dia (em minutos). CLT padrão: 120 (Art. 59).",
+      "default": 120,
+      "example": 120
+    },
+    {
+      "name": "overtimeRateWeekday",
+      "type": "number",
+      "description": "Multiplicador da hora extra em dia útil. CLT mínimo: 1.50 (50%).",
+      "default": 1.5,
+      "example": 1.5
+    },
+    {
+      "name": "overtimeRateWeekend",
+      "type": "number",
+      "description": "Multiplicador da hora extra em fim de semana / feriado.",
+      "default": 2.0,
+      "example": 2.0
+    },
+    {
+      "name": "interjornadaMinHours",
+      "type": "integer",
+      "description": "Intervalo mínimo entre jornadas. CLT Art. 66: 11h.",
+      "default": 11,
+      "example": 11
+    },
+    {
+      "name": "intrajornadaMinMinutes",
+      "type": "integer",
+      "description": "Intervalo intrajornada mínimo (almoço). Para jornadas >6h: 60min. Entre 4h e 6h: 15min.",
+      "default": 60,
+      "example": 60
+    },
+    {
+      "name": "bancoHorasEnabled",
+      "type": "boolean",
+      "description": "Se TRUE, banco de horas é permitido.",
+      "default": false,
+      "example": true
+    },
+    {
+      "name": "bancoHorasSettlementDays",
+      "type": "integer",
+      "description": "Janela máxima para compensação (dias). CLT permite até 6 meses (180 dias) por acordo individual, 1 ano (365) por acordo coletivo.",
+      "example": 180
+    },
+    {
+      "name": "saturdayIsWorkDay",
+      "type": "boolean",
+      "description": "Se sábado conta como dia útil ordinário.",
+      "default": false,
+      "example": false
+    },
+    {
+      "name": "remoteWorkAllowed",
+      "type": "boolean",
+      "description": "Se a CCT permite teletrabalho/home office.",
+      "default": true,
+      "example": true
+    },
+    {
+      "name": "additionalHolidays",
+      "type": "text",
+      "description": "Feriados adicionais específicos da categoria, separados por vírgula no formato MM-DD.",
+      "example": "01-25,07-28"
+    },
+    {
+      "name": "sourceDocument",
+      "type": "text",
+      "description": "URL ou referência ao documento original da CCT (Sistema Mediador / sindicato).",
+      "example": "https://sistemamediador.mte.gov.br/..."
+    },
+    {
+      "name": "lastReviewedBy",
+      "type": "text",
+      "description": "Quem revisou esta entrada por último (advogado trabalhista, RH).",
+      "example": "Dr. Silva (trabalhista@empresa.com.br)"
+    },
+    {
+      "name": "lastReviewedAt",
+      "type": "datetime",
+      "description": "Timestamp da última revisão.",
+      "example": "2025-10-15T14:00:00Z"
+    }
+  ],
+  "starterCcts": [
+    {
+      "cctCode": "CLT_PADRAO",
+      "displayName": "CLT Padrão (sem CCT específica)",
+      "maxDailyHours": 8,
+      "maxWeeklyHours": 44,
+      "overtimeMaxDailyMinutes": 120,
+      "overtimeRateWeekday": 1.5,
+      "overtimeRateWeekend": 2.0,
+      "interjornadaMinHours": 11,
+      "intrajornadaMinMinutes": 60,
+      "bancoHorasEnabled": false,
+      "saturdayIsWorkDay": true
+    },
+    {
+      "cctCode": "BANCARIOS_SP_2025",
+      "displayName": "Bancários — SP — 2025/2026 (exemplo, validar com sindicato)",
+      "maxDailyHours": 6,
+      "maxWeeklyHours": 30,
+      "overtimeMaxDailyMinutes": 120,
+      "overtimeRateWeekday": 1.5,
+      "overtimeRateWeekend": 2.0,
+      "interjornadaMinHours": 11,
+      "intrajornadaMinMinutes": 15,
+      "bancoHorasEnabled": true,
+      "bancoHorasSettlementDays": 180,
+      "saturdayIsWorkDay": false,
+      "_disclaimer": "Valores ilustrativos. Cada empresa deve validar com a CCT vigente e seu departamento jurídico."
+    }
+  ],
+  "_warning": "Este arquivo é um schema, não a fonte de verdade legal. Convenções Coletivas têm centenas de cláusulas — este modelo cobre apenas as relevantes para controle de acesso digital. Consulte advogado trabalhista para implantação."
+}

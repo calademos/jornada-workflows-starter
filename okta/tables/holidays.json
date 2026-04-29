@@ -1,0 +1,66 @@
+{
+  "tableName": "holidays",
+  "description": "Feriados nacionais, estaduais e municipais. Workflows consulta para determinar se a data corrente é feriado.",
+  "primaryKey": "holidayId",
+  "indexes": [
+    "date",
+    "scope"
+  ],
+  "columns": [
+    {
+      "name": "holidayId",
+      "type": "text",
+      "description": "ID gerado: SCOPE_DATE_NAME (ex: NACIONAL_2026-04-21_TIRADENTES)",
+      "required": true,
+      "example": "NACIONAL_2026-04-21_TIRADENTES"
+    },
+    {
+      "name": "date",
+      "type": "date",
+      "description": "Data do feriado (YYYY-MM-DD).",
+      "required": true,
+      "example": "2026-04-21"
+    },
+    {
+      "name": "name",
+      "type": "text",
+      "description": "Nome do feriado.",
+      "required": true,
+      "example": "Tiradentes"
+    },
+    {
+      "name": "scope",
+      "type": "text",
+      "description": "Abrangência: NACIONAL, ESTADUAL, MUNICIPAL.",
+      "required": true,
+      "example": "NACIONAL"
+    },
+    {
+      "name": "uf",
+      "type": "text",
+      "description": "Para feriados estaduais: sigla da UF (SP, RJ, MG, etc.). Vazio para nacionais.",
+      "example": "SP"
+    },
+    {
+      "name": "municipio",
+      "type": "text",
+      "description": "Para feriados municipais: nome do município. Vazio para outros.",
+      "example": "São Paulo"
+    },
+    {
+      "name": "isOptional",
+      "type": "boolean",
+      "description": "TRUE para pontos facultativos (não bloqueiam acesso por padrão).",
+      "default": false,
+      "example": false
+    },
+    {
+      "name": "cctOverride",
+      "type": "text",
+      "description": "Se preenchido, este feriado só se aplica a usuários com este CCT.",
+      "example": ""
+    }
+  ],
+  "seedData": "Veja okta/tables/holidays-seed-2026.csv para feriados nacionais brasileiros de 2026.",
+  "maintenance": "Atualize anualmente. Carnaval e Corpus Christi são pontos facultativos no nível federal mas frequentemente feriados em CCTs."
+}
