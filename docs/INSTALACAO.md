@@ -75,7 +75,7 @@ Os flows estão documentados como especificações JSON em [`flows/`](../flows/)
 Abra cada arquivo JSON e siga os passos de cada `card`. O Workflows Console tem o equivalente de cada card descrito.
 
 ### Opção B — Pacote .flopack (em desenvolvimento)
-Pacotes binários `.flopack` para importação direta estão sendo construídos. Acompanhe [issues do repositório](https://github.com/seu-usuario/jornada-workflows-starter/issues).
+Pacotes binários `.flopack` para importação direta estão sendo construídos. Acompanhe [issues do repositório](https://github.com/calademos/jornada-workflows-starter/issues).
 
 ### Configuração de secrets para os flows
 
@@ -182,4 +182,4 @@ No Workflows Console, vá em **Settings → Secrets** e adicione:
 
 - Leia [`LIMITACOES.md`](LIMITACOES.md) para saber o que este starter NÃO resolve
 - Leia [`ARQUITETURA.md`](ARQUITETURA.md) se quiser estender ou adaptar
-- Considere [Jornada Pro](https://github.com/seu-usuario/jornada-workflows-starter#) se você bate em algum dos limites listados
+- Considere [Jornada Pro](https://github.com/calademos/jornada-workflows-starter#) se você bate em algum dos limites listados

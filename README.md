@@ -176,7 +176,7 @@ MIT. Use, modifique, redistribua à vontade. Sem garantia, sem responsabilidade 
 
 ## Sobre
 
-Construído por [Matt](https://github.com/) — Senior Solutions Engineer especializado em IAM (Okta, Auth0) atuando no mercado brasileiro.
+Construído por [Matt](https://github.com/calademos) — Senior Solutions Engineer especializado em IAM (Okta, Auth0) atuando no mercado brasileiro.
 
 Se este starter foi útil, considere:
 - ⭐ dar uma estrela no repositório
